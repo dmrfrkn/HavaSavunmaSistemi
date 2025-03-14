@@ -17,21 +17,21 @@ class CameraGUI(QWidget):
     
     def initUI(self):
         self.setWindowTitle("Camera Interface")
-        self.setGeometry(100, 100, 800, 500)
+        self.setGeometry(100, 100, 900, 500)
         
         grid = QGridLayout()
         
         # Camera View
         self.camera_view = QLabel("Camera View")
         self.camera_view.setStyleSheet("border: 2px solid black; font-size: 16px;")
-        self.camera_view.setFixedSize(320, 240)
+        self.camera_view.setFixedSize(480, 240)
         grid.addWidget(self.camera_view, 0, 0, 1, 2)
         
         # Angle Ranges
         self.shooting_angle = QLabel("Ateş edebileceğimiz açı aralığı")
-        self.shooting_angle.setStyleSheet("border: 1px solid black; background-color: blue;")
+        self.shooting_angle.setStyleSheet("border: 1px solid black;")
         self.motion_angle = QLabel("Hareket edebileceğimiz açı aralığı")
-        self.motion_angle.setStyleSheet("border: 1px solid black; background-color: blue;")
+        self.motion_angle.setStyleSheet("border: 1px solid black;")
         
         grid.addWidget(self.shooting_angle, 1, 0)
         grid.addWidget(self.motion_angle, 1, 1)
@@ -41,9 +41,10 @@ class CameraGUI(QWidget):
         
         # Camera status
         self.camera_status = QLabel("Camera")
-        self.status_indicator = QLabel()
-        self.status_indicator.setPixmap(QPixmap(20, 20))
-        self.update_status(False)
+        self.camera_status.setStyleSheet("background-color: green; padding: 5px;")
+        
+        self.status_indicator = QLabel("Sistem Aktifliği")
+        self.status_indicator.setStyleSheet("background-color: red; padding: 5px;")
         
         status_layout = QHBoxLayout()
         status_layout.addWidget(self.camera_status)
@@ -84,14 +85,6 @@ class CameraGUI(QWidget):
         
         self.setLayout(grid)
         
-    def update_status(self, is_active):
-        pixmap = QPixmap(20, 20)
-        painter = QPainter(pixmap)
-        painter.setBrush(QColor("green" if is_active else "red"))
-        painter.drawEllipse(0, 0, 20, 20)
-        painter.end()
-        self.status_indicator.setPixmap(pixmap)
-    
     def start_timer(self):
         self.time_remaining = 300
         self.timer = QTimer(self)

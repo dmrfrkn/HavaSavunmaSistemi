@@ -1,99 +1,128 @@
 import sys
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QFrame
+import cv2
+import time
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QGridLayout
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage
+from PyQt5.QtCore import Qt, QTimer
 
-
-class ControlPanel(QWidget):
+class CameraGUI(QWidget):
     def __init__(self):
         super().__init__()
-
-        # Form Ayarları
-        self.setWindowTitle("Hava Savunma Kontrol Paneli")
-        self.setGeometry(100, 100, 800, 600)
-
-        # Kamera Görüntüsü (placeholder)
-        self.cameraView = QFrame(self)
-        self.cameraView.setGeometry(20, 20, 300, 200)
-        self.cameraView.setStyleSheet("border: 1px solid black;")
-
-        # Açılar
-        self.fireAngleLabel = QLabel("Ateş Açısı", self)
-        self.fireAngleText = QLineEdit(self)
-
-        self.moveAngleLabel = QLabel("Hareket Açısı", self)
-        self.moveAngleText = QLineEdit(self)
-
-        # Görev Butonları
-        self.task1Button = QPushButton("Görev 1", self)
-        self.task2Button = QPushButton("Görev 2", self)
-        self.task3Button = QPushButton("Görev 3", self)
-
-        # Log Alanı
-        self.logLabel = QLabel("Loglar:", self)
-
-        # Durum Panelleri
-        self.cameraStatus = QLabel(self)
-        self.cameraStatus.setGeometry(400, 20, 20, 20)
-        self.cameraStatus.setStyleSheet("background-color: red;")
-
-        self.systemStatus = QLabel(self)
-        self.systemStatus.setGeometry(440, 20, 20, 20)
-        self.systemStatus.setStyleSheet("background-color: red;")
-
-        # Bullet Count
-        self.bulletCountLabel = QLabel("Mermi: 0", self)
-
-        # Layout Ayarları
-        self.init_ui()
-
-    def init_ui(self):
-        # Açılar için Layout
-        angleLayout = QVBoxLayout()
-        angleLayout.addWidget(self.fireAngleLabel)
-        angleLayout.addWidget(self.fireAngleText)
-        angleLayout.addWidget(self.moveAngleLabel)
-        angleLayout.addWidget(self.moveAngleText)
-
-        # Butonlar için Layout
-        buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(self.task1Button)
-        buttonLayout.addWidget(self.task2Button)
-        buttonLayout.addWidget(self.task3Button)
-
-        # Durum ve Bullet Count Layout
-        statusLayout = QVBoxLayout()
-        statusLayout.addWidget(self.cameraStatus)
-        statusLayout.addWidget(self.systemStatus)
-        statusLayout.addWidget(self.bulletCountLabel)
-
-        # Ana Layout
-        mainLayout = QVBoxLayout()
-        mainLayout.addWidget(self.cameraView)
-        mainLayout.addLayout(angleLayout)
-        mainLayout.addLayout(buttonLayout)
-        mainLayout.addWidget(self.logLabel)
-        mainLayout.addLayout(statusLayout)
-
-        self.setLayout(mainLayout)
-
-    def update_status(self):
-        # Durum panellerini değiştirme
-        current_camera_status = self.cameraStatus.styleSheet()
-        current_system_status = self.systemStatus.styleSheet()
-
-        if "red" in current_camera_status:
-            self.cameraStatus.setStyleSheet("background-color: green;")
+        self.initUI()
+        self.start_timer()
+        self.cap = cv2.VideoCapture(0)
+        self.timer_camera = QTimer(self)
+        self.timer_camera.timeout.connect(self.update_camera)
+        self.timer_camera.start(30)
+    
+    def initUI(self):
+        self.setWindowTitle("Camera Interface")
+        self.setGeometry(100, 100, 800, 500)
+        
+        grid = QGridLayout()
+        
+        # Camera View
+        self.camera_view = QLabel("Camera View")
+        self.camera_view.setStyleSheet("border: 2px solid black; font-size: 16px;")
+        self.camera_view.setFixedSize(320, 240)
+        grid.addWidget(self.camera_view, 0, 0, 1, 2)
+        
+        # Angle Ranges
+        self.shooting_angle = QLabel("Ateş edebileceğimiz açı aralığı")
+        self.shooting_angle.setStyleSheet("border: 1px solid black; background-color: blue;")
+        self.motion_angle = QLabel("Hareket edebileceğimiz açı aralığı")
+        self.motion_angle.setStyleSheet("border: 1px solid black; background-color: blue;")
+        
+        grid.addWidget(self.shooting_angle, 1, 0)
+        grid.addWidget(self.motion_angle, 1, 1)
+        
+        # Right Panel
+        right_panel = QVBoxLayout()
+        
+        # Camera status
+        self.camera_status = QLabel("Camera")
+        self.status_indicator = QLabel()
+        self.status_indicator.setPixmap(QPixmap(20, 20))
+        self.update_status(False)
+        
+        status_layout = QHBoxLayout()
+        status_layout.addWidget(self.camera_status)
+        status_layout.addWidget(self.status_indicator)
+        
+        right_panel.addLayout(status_layout)
+        
+        # Logs
+        self.logs = QTextEdit()
+        self.logs.setPlaceholderText("Sistem logları burada gözükecek")
+        self.logs.setReadOnly(True)
+        right_panel.addWidget(self.logs)
+        
+        # Task Buttons
+        task_layout = QHBoxLayout()
+        self.task1_btn = QPushButton("Görev 1")
+        self.task2_btn = QPushButton("Görev 2")
+        self.task3_btn = QPushButton("Görev 3")
+        self.task1_btn.clicked.connect(lambda: self.log_task(1))
+        self.task2_btn.clicked.connect(lambda: self.log_task(2))
+        self.task3_btn.clicked.connect(lambda: self.log_task(3))
+        
+        task_layout.addWidget(self.task1_btn)
+        task_layout.addWidget(self.task2_btn)
+        task_layout.addWidget(self.task3_btn)
+        right_panel.addLayout(task_layout)
+        
+        # Bullet Count and Timer
+        self.bullet_count = QLabel("Bullet Count")
+        self.timer_label = QLabel("Kalan süre: 300")
+        
+        bottom_layout = QHBoxLayout()
+        bottom_layout.addWidget(self.bullet_count)
+        bottom_layout.addWidget(self.timer_label)
+        right_panel.addLayout(bottom_layout)
+        
+        grid.addLayout(right_panel, 0, 2, 2, 1)
+        
+        self.setLayout(grid)
+        
+    def update_status(self, is_active):
+        pixmap = QPixmap(20, 20)
+        painter = QPainter(pixmap)
+        painter.setBrush(QColor("green" if is_active else "red"))
+        painter.drawEllipse(0, 0, 20, 20)
+        painter.end()
+        self.status_indicator.setPixmap(pixmap)
+    
+    def start_timer(self):
+        self.time_remaining = 300
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_timer)
+        self.timer.start(1000)
+    
+    def update_timer(self):
+        if self.time_remaining > 0:
+            self.time_remaining -= 1
+            self.timer_label.setText(f"Kalan süre: {self.time_remaining}")
         else:
-            self.cameraStatus.setStyleSheet("background-color: red;")
+            self.timer.stop()
+    
+    def update_camera(self):
+        ret, frame = self.cap.read()
+        if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            height, width, channel = frame.shape
+            bytes_per_line = channel * width
+            qimg = QImage(frame.data, width, height, bytes_per_line, QImage.Format_RGB888)
+            self.camera_view.setPixmap(QPixmap.fromImage(qimg))
+    
+    def log_task(self, task_number):
+        self.logs.append(f"Görev {task_number} başladı")
 
-        if "red" in current_system_status:
-            self.systemStatus.setStyleSheet("background-color: green;")
-        else:
-            self.systemStatus.setStyleSheet("background-color: red;")
-
+    def closeEvent(self, event):
+        self.cap.release()
+        event.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    panel = ControlPanel()
-    panel.show()
+    ex = CameraGUI()
+    ex.show()
     sys.exit(app.exec_())

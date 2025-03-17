@@ -1,8 +1,8 @@
 import sys
 import cv2
 import time
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QGridLayout
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QLineEdit
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
 
 class CameraGUI(QWidget):
@@ -38,6 +38,15 @@ class CameraGUI(QWidget):
         
         # Right Panel
         right_panel = QVBoxLayout()
+        
+        # Mode Selection
+        self.mode_label = QLabel("Mod Seçimi:")
+        self.mode_combo = QComboBox()
+        self.mode_combo.addItems(["Manuel", "Otonom"])
+        mode_layout = QHBoxLayout()
+        mode_layout.addWidget(self.mode_label)
+        mode_layout.addWidget(self.mode_combo)
+        right_panel.addLayout(mode_layout)
         
         # Camera status
         self.camera_status = QLabel("Camera")
@@ -80,6 +89,19 @@ class CameraGUI(QWidget):
         bottom_layout.addWidget(self.bullet_count)
         bottom_layout.addWidget(self.timer_label)
         right_panel.addLayout(bottom_layout)
+        
+        # Angle Limit Inputs
+        self.shoot_angle_input = QLineEdit()
+        self.shoot_angle_input.setPlaceholderText("Örn: -45, 45")
+        self.move_angle_input = QLineEdit()
+        self.move_angle_input.setPlaceholderText("Örn: 0, 270")
+        
+        angle_layout = QVBoxLayout()
+        angle_layout.addWidget(QLabel("Ateş açısı sınırları:"))
+        angle_layout.addWidget(self.shoot_angle_input)
+        angle_layout.addWidget(QLabel("Hareket açısı sınırları:"))
+        angle_layout.addWidget(self.move_angle_input)
+        right_panel.addLayout(angle_layout)
         
         grid.addLayout(right_panel, 0, 2, 2, 1)
         

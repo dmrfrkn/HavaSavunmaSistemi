@@ -40,6 +40,10 @@ for contour in contours_blue:
         # Boyut (genişlik, yükseklik)
         size = (w, h)
         
+        # Alanı hesaplama
+        area = w * h
+        print(f"Blue Area: {area} px")  # Alanı konsola yazdır
+        
         # Dikdörtgen çizme
         cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
         # Orta nokta yazma
@@ -57,6 +61,10 @@ for contour in contours_red:
         center_y = y + h // 2
         # Boyut (genişlik, yükseklik)
         size = (w, h)
+        
+        # Alanı hesaplama
+        area = w * h
+        print(f"Red Area: {area} px")  # Alanı konsola yazdır
         
         # Dikdörtgen çizme
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)

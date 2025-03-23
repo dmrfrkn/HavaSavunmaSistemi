@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+"c:\Users\CumFur\Desktop\Ekran görüntüsü 2025-03-23 222201.png"
 video_path = "c:/Users/CumFur/Desktop/stock-footage-red-balloon-flying-in-blue-sky.webm"  
 cap = cv2.VideoCapture(video_path)
 

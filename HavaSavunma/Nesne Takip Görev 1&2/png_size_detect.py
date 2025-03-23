@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-image_path = "c:/Users/CumFur/Desktop/aa.png"
+image_path = "c:/Users/CumFur/Desktop/cc.png"
 
 image = cv2.imread(image_path)
 if image is None:
@@ -32,39 +32,44 @@ contours_blue, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPR
 contours_red, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 small_baloon = None  # Küçük balonu saklayacak değişken
+small_baloon_coords = None  # Küçük balonun koordinatlarını saklayacak değişken
 
 # İki balonun da alanlarını karşılaştırarak küçük olanı belirleme
 for contour in contours_blue:
     if cv2.contourArea(contour) > 500:  # Küçük gürültüleri engelle
         x, y, w, h = cv2.boundingRect(contour)
-        
+        # Alanı hesaplama
         area = w * h
-        print(f"Blue Area: {area} px") 
+        print(f"Blue Area: {area} px at Coordinates: ({x}, {y})")  # Alanı ve koordinatları konsola yazdır
         
-        if small_baloon is None or area < small_baloon[0]:  
-            small_baloon = (area, "Blue") 
+        # Küçük balonu belirleme
+        if small_baloon is None or area < small_baloon[0]:  # Eğer küçük balon yoksa veya bu alan daha küçükse
+            small_baloon = (area, "Blue")  # Alanı ve rengini tut
+            small_baloon_coords = (x, y)  # Koordinatları tut
 
-        
+        # Dikdörtgen çizme
         cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
         
 for contour in contours_red:
     if cv2.contourArea(contour) > 500:
         x, y, w, h = cv2.boundingRect(contour)
-        
+        # Alanı hesaplama
         area = w * h
-        print(f"Red Area: {area} px") 
-    
-        if small_baloon is None or area < small_baloon[0]:  
-            small_baloon = (area, "Red")  
+        print(f"Red Area: {area} px at Coordinates: ({x}, {y})")  # Alanı ve koordinatları konsola yazdır
+        
+        # Küçük balonu belirleme
+        if small_baloon is None or area < small_baloon[0]:  # Eğer küçük balon yoksa veya bu alan daha küçükse
+            small_baloon = (area, "Red")  # Alanı ve rengini tut
+            small_baloon_coords = (x, y)  # Koordinatları tut
 
-      
+        # Dikdörtgen çizme
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-
+# Küçük balonu ve koordinatlarını konsola yazdırma
 if small_baloon:
-    print(f"Small Baloon: {small_baloon[1]} baloon with Area: {small_baloon[0]} px")
+    print(f"Small Baloon: {small_baloon[1]} baloon with Area: {small_baloon[0]} px at Coordinates: {small_baloon_coords}")
 
-
+# Sonucu göster
 cv2.imshow("Balon Algilama", image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()

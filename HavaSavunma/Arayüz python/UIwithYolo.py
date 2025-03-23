@@ -18,7 +18,7 @@ class CameraGUI(QWidget):
         self.timer_camera.start(30)
         
         # YOLOv8 modelini yükle
-        self.model = YOLO("HavaSavunma/HavaSavunmaBest.pt")
+        self.model = YOLO("E:/Teknofest Sema İha Takımı/SEMAVSCODE/HavaSavunma/Arayüz python/HavaSavunmaBest.pt")
     
     def initUI(self):
         self.setWindowTitle("Camera Interface")

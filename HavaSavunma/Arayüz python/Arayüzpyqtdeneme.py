@@ -14,6 +14,7 @@ class CameraGUI(QWidget):
         self.timer_camera = QTimer(self)
         self.timer_camera.timeout.connect(self.update_camera)
         self.timer_camera.start(30)
+        self.shooting_mode = "Tekli Atış"
     
     def initUI(self):
         self.setWindowTitle("Camera Interface")
@@ -81,6 +82,18 @@ class CameraGUI(QWidget):
         task_layout.addWidget(self.task3_btn)
         right_panel.addLayout(task_layout)
         
+        # Shooting Mode Selection
+        shooting_mode_layout = QHBoxLayout()
+        self.single_shot_btn = QPushButton("Tekli Atış")
+        self.triple_shot_btn = QPushButton("3'lü Atış")
+        
+        self.single_shot_btn.clicked.connect(lambda: self.change_shooting_mode("Tekli Atış"))
+        self.triple_shot_btn.clicked.connect(lambda: self.change_shooting_mode("3'lü Atış"))
+        
+        shooting_mode_layout.addWidget(self.single_shot_btn)
+        shooting_mode_layout.addWidget(self.triple_shot_btn)
+        right_panel.addLayout(shooting_mode_layout)
+        
         # Bullet Count and Timer
         self.bullet_count = QLabel("Bullet Count")
         self.timer_label = QLabel("Kalan süre: 300")
@@ -119,7 +132,11 @@ class CameraGUI(QWidget):
         grid.addLayout(right_panel, 0, 2, 2, 1)
         
         self.setLayout(grid)
-        
+    
+    def change_shooting_mode(self, mode):
+        self.shooting_mode = mode
+        self.logs.append(f"Atış modu değiştirildi: {mode}")
+    
     def update_angle_limits(self, angle_type):
         if angle_type == "Ateş açısı":
             value = self.shoot_angle_input.text()
@@ -152,7 +169,7 @@ class CameraGUI(QWidget):
     
     def log_task(self, task_number):
         self.logs.append(f"Görev {task_number} başladı")
-
+    
     def closeEvent(self, event):
         self.cap.release()
         event.accept()

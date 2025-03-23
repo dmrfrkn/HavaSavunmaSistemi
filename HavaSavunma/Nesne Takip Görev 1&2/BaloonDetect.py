@@ -1,7 +1,7 @@
 import cv2
 from ultralytics import YOLO
 
-model = YOLO("E:/Teknofest Sema İha Takimi/SEMAVSCODE/HavaSavunma/HavaSavunmaBest.pt")
+model = YOLO("HavaSavunma/Nesne Takip Görev 1&2/HavaSavunmaBest.pt")
 
 print("Model yüklendi.")
 cap = cv2.VideoCapture(0)

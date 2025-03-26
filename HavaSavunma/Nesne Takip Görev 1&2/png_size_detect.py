@@ -3,13 +3,17 @@ import cv2
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QLineEdit
 from PyQt5.QtGui import QPixmap, QImage
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 class CameraGUI(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.process_image("c:/Users/CumFur/Desktop/cc.png")  # PNG dosyasını işle
+        self.cap = cv2.VideoCapture(0)
+        self.timer_camera = QTimer(self)
+        self.timer_camera.timeout.connect(self.update_camera)
+        self.timer_camera.start(30)
+        self.shooting_mode = "Tekli Atış"
     
     def initUI(self):
         self.setWindowTitle("Camera Interface")
@@ -17,19 +21,19 @@ class CameraGUI(QWidget):
         
         grid = QGridLayout()
         
-        # Görüntü Alanı
-        self.image_view = QLabel("Image View")
-        self.image_view.setStyleSheet("border: 2px solid black;")
-        self.image_view.setFixedSize(480, 320)
-        grid.addWidget(self.image_view, 0, 0, 1, 2)
+        # Camera View
+        self.camera_view = QLabel("Camera View")
+        self.camera_view.setStyleSheet("border: 2px solid black;")
+        self.camera_view.setFixedSize(480, 320)
+        grid.addWidget(self.camera_view, 0, 0, 1, 2)
         
-        # Log Ekranı
+        # Log Panel
         self.logs = QTextEdit()
         self.logs.setPlaceholderText("Sistem logları burada gözükecek")
         self.logs.setReadOnly(True)
         grid.addWidget(self.logs, 1, 0, 1, 2)
         
-        # Açılar
+        # Angles
         self.shooting_angle = QLabel("Ateş Açısı: -")
         self.motion_angle = QLabel("Hareket Açısı: -")
         grid.addWidget(self.shooting_angle, 2, 0)
@@ -37,23 +41,21 @@ class CameraGUI(QWidget):
         
         self.setLayout(grid)
     
-    def process_image(self, image_path):
-        image = cv2.imread(image_path)
-        if image is None:
-            self.logs.append("Görsel yüklenemedi!")
-            return
-        
-        image, smallest_balloon, yaw, pitch = self.detect_balloon(image)
-        if smallest_balloon:
-            self.logs.append(f"Tespit edilen balon: {smallest_balloon[1]} ({smallest_balloon[0]} px) - Koordinatlar: {smallest_balloon[2]}")
-            self.shooting_angle.setText(f"Ateş Açısı: {yaw:.2f}°")
-            self.motion_angle.setText(f"Hareket Açısı: {pitch:.2f}°")
-        
-        # Görseli QLabel içinde gösterme
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        height, width, channel = image.shape
-        qimg = QImage(image.data, width, height, channel * width, QImage.Format_RGB888)
-        self.image_view.setPixmap(QPixmap.fromImage(qimg))
+    def update_camera(self):
+        ret, frame = self.cap.read()
+        if ret:
+            frame, smallest_balloon, yaw, pitch = self.detect_balloon(frame)
+            
+            if smallest_balloon:
+                self.logs.append(f"Tespit edilen balon: {smallest_balloon[1]} ({smallest_balloon[0]} px) - Koordinatlar: {smallest_balloon[2]}")
+                self.shooting_angle.setText(f"Ateş Açısı: {yaw:.2f}°")
+                self.motion_angle.setText(f"Hareket Açısı: {pitch:.2f}°")
+            
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            height, width, channel = frame.shape
+            bytes_per_line = channel * width
+            qimg = QImage(frame.data, width, height, bytes_per_line, QImage.Format_RGB888)
+            self.camera_view.setPixmap(QPixmap.fromImage(qimg))
     
     def detect_balloon(self, image):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -93,6 +95,10 @@ class CameraGUI(QWidget):
             return image, smallest_balloon, yaw, pitch
         
         return image, None, 0, 0
+    
+    def closeEvent(self, event):
+        self.cap.release()
+        event.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

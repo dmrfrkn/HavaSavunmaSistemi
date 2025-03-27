@@ -108,11 +108,13 @@ class CameraGUI(QWidget):
         self.shoot_angle_input.setPlaceholderText("Örn: -45, 45")
         self.shoot_angle_button = QPushButton("Onayla")
         self.shoot_angle_button.clicked.connect(lambda: self.update_angle_limits("Ateş açısı"))
+        self.shoot_angle_input.returnPressed.connect(lambda: self.update_angle_limits("Ateş açısı"))  # Enter tuşuna basınca çalıştır
         
         self.move_angle_input = QLineEdit()
         self.move_angle_input.setPlaceholderText("Örn: 0, 270")
         self.move_angle_button = QPushButton("Onayla")
         self.move_angle_button.clicked.connect(lambda: self.update_angle_limits("Hareket açısı"))
+        self.move_angle_input.returnPressed.connect(lambda: self.update_angle_limits("Hareket açısı"))  # Enter tuşuna basınca çalıştır
         
         angle_layout = QVBoxLayout()
         angle_layout.addWidget(QLabel("Ateş açısı sınırları:"))
@@ -140,9 +142,11 @@ class CameraGUI(QWidget):
     def update_angle_limits(self, angle_type):
         if angle_type == "Ateş açısı":
             value = self.shoot_angle_input.text()
+            self.shoot_angle_input.clear()  # Alanı temizle
         else:
             value = self.move_angle_input.text()
-        
+            self.move_angle_input.clear()  # Alanı temizle
+
         self.logs.append(f"{angle_type} sınırları güncellendi: {value}")
     
     def start_timer(self):

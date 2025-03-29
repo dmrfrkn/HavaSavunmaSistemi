@@ -1,6 +1,5 @@
 import sys
 import cv2
-import numpy as np
 import time
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QLineEdit
 from PyQt5.QtGui import QPixmap, QImage
@@ -109,13 +108,11 @@ class CameraGUI(QWidget):
         self.shoot_angle_input.setPlaceholderText("Örn: -45, 45")
         self.shoot_angle_button = QPushButton("Onayla")
         self.shoot_angle_button.clicked.connect(lambda: self.update_angle_limits("Ateş açısı"))
-        self.shoot_angle_input.returnPressed.connect(lambda: self.update_angle_limits("Ateş açısı"))  # Enter tuşuna basınca çalıştır
         
         self.move_angle_input = QLineEdit()
         self.move_angle_input.setPlaceholderText("Örn: 0, 270")
         self.move_angle_button = QPushButton("Onayla")
         self.move_angle_button.clicked.connect(lambda: self.update_angle_limits("Hareket açısı"))
-        self.move_angle_input.returnPressed.connect(lambda: self.update_angle_limits("Hareket açısı"))  # Enter tuşuna basınca çalıştır
         
         angle_layout = QVBoxLayout()
         angle_layout.addWidget(QLabel("Ateş açısı sınırları:"))
@@ -143,11 +140,9 @@ class CameraGUI(QWidget):
     def update_angle_limits(self, angle_type):
         if angle_type == "Ateş açısı":
             value = self.shoot_angle_input.text()
-            self.shoot_angle_input.clear()  # Alanı temizle
         else:
             value = self.move_angle_input.text()
-            self.move_angle_input.clear()  # Alanı temizle
-
+        
         self.logs.append(f"{angle_type} sınırları güncellendi: {value}")
     
     def start_timer(self):
@@ -166,5 +161,21 @@ class CameraGUI(QWidget):
     def update_camera(self):
         ret, frame = self.cap.read()
         if ret:
-            # Görüntü işleme: Mavi nesneleri algıla
-            processed_frame = frame.copy()  # İşleme yaparken orijinal görüntüyü korumak için kopya oluştur\n            \n            hsv = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2HSV)\n            lower_blue = np.array([100, 150, 50])\n            upper_blue = np.array([140, 255, 255])\n            mask = cv2.inRange(hsv, lower_blue, upper_blue)\n            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\n            \n            for cnt in contours:\n                area = cv2.contourArea(cnt)\n                if area > 500:  # Gürültüyü önlemek için\n                    x, y, w, h = cv2.boundingRect(cnt)\n                    cv2.rectangle(processed_frame, (x, y), (x + w, y + h), (255, 0, 0), 2)\n                    self.logs.append(f\"Mavi cisim alanı: {int(area)} piksel\")\n            \n            # İşlenmiş görüntüyü RGB formatına çevir ve göster\n            processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)\n            height, width, channel = processed_frame.shape\n            bytes_per_line = channel * width\n            qimg = QImage(processed_frame.data, width, height, bytes_per_line, QImage.Format_RGB888)\n            self.camera_view.setPixmap(QPixmap.fromImage(qimg))\n    \n    def log_task(self, task_number):\n        self.logs.append(f\"Görev {task_number} başladı\")\n    \n    def closeEvent(self, event):\n        self.cap.release()\n        event.accept()\n\nif __name__ == '__main__':\n    app = QApplication(sys.argv)\n    ex = CameraGUI()\n    ex.show()\n    sys.exit(app.exec_())\n```
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            height, width, channel = frame.shape
+            bytes_per_line = channel * width
+            qimg = QImage(frame.data, width, height, bytes_per_line, QImage.Format_RGB888)
+            self.camera_view.setPixmap(QPixmap.fromImage(qimg))
+    
+    def log_task(self, task_number):
+        self.logs.append(f"Görev {task_number} başladı")
+    
+    def closeEvent(self, event):
+        self.cap.release()
+        event.accept()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = CameraGUI()
+    ex.show()
+    sys.exit(app.exec_())

@@ -48,7 +48,7 @@ def detect_balloon(image_path):
         print(f"En küçük balonun alanı: {smallest_balloon[0]} px²")
         print(f"Koordinatlar: (x: {x}, y: {y})")
 
-    # İşlenmiş görüntüyü göster
+   
     cv2.imshow("Balon Algılama", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

@@ -1,8 +1,9 @@
 import sys
 import socket
-import struct
 import pickle
+import base64
 import cv2
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import QTimer
@@ -11,60 +12,65 @@ class CameraGUI(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.start_timer()
-
-        # Socket Client Setup
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect(("127.0.0.1", 9999))  # OpenCV server ile bağlantı
-
-        self.data = b""
-        self.payload_size = struct.calcsize("L")
-
-        self.timer_camera = QTimer(self)
-        self.timer_camera.timeout.connect(self.update_camera)
-        self.timer_camera.start(30)
+        self.start_socket()
+        self.timer.start(30)
 
     def initUI(self):
         self.setWindowTitle("Camera Interface")
         self.setGeometry(100, 100, 900, 500)
 
-        # Camera View
+        self.layout = QVBoxLayout()
         self.camera_view = QLabel("Camera View")
-        self.camera_view.setStyleSheet("border: 2px solid black; font-size: 16px;")
-        self.camera_view.setFixedSize(480, 240)
+        self.layout.addWidget(self.camera_view)
+        self.setLayout(self.layout)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.camera_view)
-        self.setLayout(layout)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_camera)
+
+    def start_socket(self):
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client_socket.connect(("localhost", 12345))
 
     def update_camera(self):
-        # Verileri al
-        while len(self.data) < self.payload_size:
-            packet = self.client_socket.recv(4096)
-            if not packet:
-                return
-            self.data += packet
+        try:
+            # Gelen veriyi al
+            data = b""
+            while True:
+                packet = self.client_socket.recv(4096)
+                if not packet:
+                    break
+                data += packet
 
-        # Mesaj boyutunu al
-        packed_msg_size = self.data[:self.payload_size]
-        self.data = self.data[self.payload_size:]
-        msg_size = struct.unpack("L", packed_msg_size)[0]
+            # Veriyi çözüp ekrana bastır
+            received_data = pickle.loads(data)
+            image_data = received_data["image"]
+            objects = received_data["objects"]
 
-        # Veriyi al
-        while len(self.data) < msg_size:
-            self.data += self.client_socket.recv(4096)
+            # Base64'ten OpenCV formatına çevir
+            img = base64.b64decode(image_data)
+            np_img = np.frombuffer(img, dtype=np.uint8)
+            frame = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
-        frame_data = self.data[:msg_size]
-        self.data = self.data[msg_size:]
+            # Gelen verileri ekrana çiz
+            for obj in objects:
+                label, x, y, w, h = obj
+                color = (255, 0, 0) if label == "Friend" else (0, 0, 255)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+                cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-        frame = pickle.loads(frame_data)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # OpenCV görüntüsünü PyQt’ye aktar
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            height, width, channel = frame.shape
+            bytes_per_line = channel * width
+            qimg = QImage(frame.data, width, height, bytes_per_line, QImage.Format_RGB888)
+            self.camera_view.setPixmap(QPixmap.fromImage(qimg))
 
-        # PyQt'da görüntüye dönüştür
-        h, w, ch = frame.shape
-        bytes_per_line = ch * w
-        qimg = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
-        self.camera_view.setPixmap(QPixmap.fromImage(qimg))
+        except Exception as e:
+            print(f"Socket Hatası: {e}")
+
+    def closeEvent(self, event):
+        self.client_socket.close()
+        event.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

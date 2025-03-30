@@ -22,7 +22,7 @@ while True:
     
     # Takip edilen balonları güncelle
     new_tracker_list = []
-    for tracker, bid, initial_area in tracker_list:
+    for tracker, bid, initial_area, bx, by in tracker_list:
         success, bbox = tracker.update(frame)
         if success:
             x, y, w, h = [int(v) for v in bbox]
@@ -30,7 +30,7 @@ while True:
             print(f"Balloon {bid} tracked at ({x},{y}) - Area: {area} pixels^2")
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(frame, f"Balloon {bid}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            new_tracker_list.append((tracker, bid, initial_area))
+            new_tracker_list.append((tracker, bid, initial_area, x, y))
     
     # Yeni balonları tespit et
     circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1.2, minDist=30, param1=50, param2=30, minRadius=10, maxRadius=100)
@@ -52,13 +52,13 @@ while True:
                 new_bbox = (x1, y1, x2 - x1, y2 - y1)
                 
                 # Yeni bir balon mu?
-                already_tracked = any(abs(x - bx) < 30 and abs(y - by) < 30 for _, bx, by, _ in tracker_list)
+                already_tracked = any(abs(x - bx) < 30 and abs(y - by) < 30 for _, _, _, bx, by in tracker_list)
                 if not already_tracked:
                     tracker = cv2.TrackerCSRT_create()
                     tracker.init(frame, new_bbox)
                     balloon_id += 1
                     initial_area = (x2 - x1) * (y2 - y1)
-                    new_tracker_list.append((tracker, balloon_id, initial_area))
+                    new_tracker_list.append((tracker, balloon_id, initial_area, x, y))
     
     tracker_list = new_tracker_list  # Takip listesini güncelle
     

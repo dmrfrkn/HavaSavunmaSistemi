@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-# Kamera bağlantısı açma
 cap = cv2.VideoCapture(0)
 tracker = cv2.TrackerCSRT_create()  # CSRT Tracker kullanılıyor
 tracking = False  # Takip durumunu belirleyen bayrak
@@ -22,7 +21,6 @@ while True:
     blurred = cv2.GaussianBlur(gray, (9, 9), 2)
     
     if not tracking:
-        # Balonları tespit et
         circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1.2, minDist=30, param1=50, param2=30, minRadius=10, maxRadius=100)
         
         if circles is not None:
@@ -30,7 +28,6 @@ while True:
             for i in circles[0, :]:
                 x, y, r = i
                 
-                # Renk filtresi uygula
                 mask_circle = np.zeros_like(gray)
                 cv2.circle(mask_circle, (x, y), r, 255, -1)
                 mean_sat = np.mean(hsv[:, :, 1][mask_circle == 255])

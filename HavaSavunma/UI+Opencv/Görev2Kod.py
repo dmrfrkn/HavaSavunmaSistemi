@@ -6,7 +6,7 @@ import pickle
 
 # Socket oluştur
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(("localhost", 12345))  # IP ve Port
+server_socket.bind(("localhost", 55555))  # IP ve Port
 server_socket.listen(1)
 
 print("Bağlantı bekleniyor...")
@@ -67,7 +67,8 @@ while True:
     # Algılanan nesneleri JSON olarak gönder
     data = {"image": jpg_as_text, "objects": detected_objects}
     serialized_data = pickle.dumps(data)
-    
+    print("Bağlantı sağlandı, veri gönderiliyor...")
+
     conn.sendall(serialized_data)
 
 cap.release()

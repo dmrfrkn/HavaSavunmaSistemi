@@ -29,9 +29,11 @@ class CameraGUI(QWidget):
 
     def start_socket(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect(("localhost", 12345))
+        self.client_socket.connect(("localhost", 55555))
 
     def update_camera(self):
+        print("Veri alınıyor...")
+    
         try:
             # Gelen veriyi al
             data = b""

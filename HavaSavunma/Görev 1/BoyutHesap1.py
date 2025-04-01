@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 
 cap = cv2.VideoCapture(0)
-tracker = cv2.TrackerCSRT_create()  # CSRT Tracker kullanılıyor
-tracking = False  # Takip durumunu belirleyen bayrak
-bbox = None  # Takip edilen alan
+tracker = cv2.TrackerCSRT_create()  
+tracking = False  
+bbox = None  
 
 if not cap.isOpened():
     print("Kamera açılmadı!")
@@ -36,7 +36,7 @@ while True:
                 if mean_sat > 50 and mean_val > 50:
                     x1, y1, x2, y2 = x - r, y - r, x + r, y + r
                     bbox = (x1, y1, x2 - x1, y2 - y1)
-                    tracker.init(frame, bbox)  # Takibi başlat
+                    tracker.init(frame, bbox)  
                     tracking = True
                     break
     else:
@@ -49,7 +49,7 @@ while True:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(frame, f"Area: {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         else:
-            tracking = False  # Eğer takip kaybolursa, tekrar algılama yap
+            tracking = False 
     
     cv2.imshow("Balloon Tracking", frame)
     

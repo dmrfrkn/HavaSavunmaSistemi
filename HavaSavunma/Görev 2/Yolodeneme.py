@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # YOLO modelini yükle
-model_path = "HavaSavunma/Görev 1/HavaSavunmaBest.pt"
+model_path = "HavaSavunmaBest.pt"
 model = YOLO(model_path).to("cpu")  # Eğer GPU'n varsa "cuda" kullanabilirsin
 
 # Kamerayı başlat (veya video dosyası kullan)

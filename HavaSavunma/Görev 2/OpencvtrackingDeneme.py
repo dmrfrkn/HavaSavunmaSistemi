@@ -3,7 +3,7 @@ import numpy as np
 from ultralytics import YOLO
 
 # Model yolunu yazın
-model = YOLO("E:/Teknofest Sema İha Takımı/SEMAVSCODE/HavaSavunma/HavaSavunmaBest.pt")
+model = YOLO("HavaSavunmaBest.pt")
 
 # Kamerayı başlat
 cap = cv2.VideoCapture(0)

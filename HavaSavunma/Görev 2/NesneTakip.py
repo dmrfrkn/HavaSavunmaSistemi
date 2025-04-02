@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Model yolunu yazın
-model = YOLO("E:/Teknofest Sema İha Takımı/SEMAVSCODE/HavaSavunma/HavaSavunmaBest.pt").to("cuda")
+model = YOLO("HavaSavunmaBest.pt").to("cuda")
 print("Model yüklendi.")
 
 # Kamerayı başlat
